@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "6732882554",
+    "firebase_url": "https://lamsa-app-ba17e-default-rtdb.firebaseio.com",
+    "project_id": "lamsa-app-ba17e",
+    "storage_bucket": "lamsa-app-ba17e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:6732882554:android:4d8de9c2609e416edf11c3",
+        "android_client_info": {
+          "package_name": "com.lamsa.lamsa_customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8XzLqQF6C-6B_z3qMISwI4R_cJ4fkIa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:6732882554:android:9276915c5e151689df11c3",
+        "android_client_info": {
+          "package_name": "com.lamsa.lamsa_seller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8XzLqQF6C-6B_z3qMISwI4R_cJ4fkIa0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
