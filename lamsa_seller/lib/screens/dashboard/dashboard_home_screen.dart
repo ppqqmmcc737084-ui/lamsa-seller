@@ -37,6 +37,15 @@ class DashboardHomeScreen extends StatelessWidget {
                   Expanded(child: _statCard('إجمالي المبيعات', '${stats.totalRevenue.toStringAsFixed(0)} ر.س', Icons.payments_rounded, AppColors.dark)),
                 ],
               ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyBannersScreen())),
+                  icon: const Icon(Icons.campaign_outlined),
+                  label: const Text('إدارة العروض والبانرات'),
+                ),
+              ),
               if (stats.pendingOrders > 0) ...[
                 const SizedBox(height: 20),
                 Container(
@@ -81,15 +90,6 @@ class DashboardHomeScreen extends StatelessWidget {
           Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.dark)),
           const SizedBox(height: 2),
           Text(label, style: const TextStyle(fontSize: 11, color: AppColors.grey)),
-              const SizedBox(height: 20),
-               SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyBannersScreen())),
-                  icon: const Icon(Icons.campaign_outlined),
-                  label: const Text('إدارة العروض والبانرات'),
-                ),
-              ),
         ],
       ),
     );
