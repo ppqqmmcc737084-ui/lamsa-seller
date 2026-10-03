@@ -1,7 +1,7 @@
 name: Build & Release APK
 
 on:
-  workflow_dispatch: # يسمح بتشغيله يدوياً من تبويب Actions
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,44 +11,41 @@ jobs:
     name: Build Flutter APK
     runs-on: ubuntu-latest
     
-    # ⚠️ ملاحظة هامة: إذا كان ملف pubspec.yaml موجوداً في المجلد الرئيسي للمستودع 
-    # (وليس داخل مجلد فرعي اسمه lamsa_seller)، احذف قسم defaults هذا بالكامل.
     defaults:
       run:
         working-directory: lamsa_seller
 
     steps:
-      # 1. سحب الكود من المستودع
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. إعداد بيئة Java (مطلوبة لبناء أندرويد)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 3. إعداد بيئة Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # 4. تثبيت الاعتماديات
+      # ✅ الخطوة الجديدة: إنشاء ملف المفاتيح ديناميكياً من الأسرار
+      - name: Create OneSignal Keys File
+        run: |
+          mkdir -p lib/config
+          echo "class OneSignalKeys { static const String appId = '${{ secrets.ONESIGNAL_APP_ID }}'; static const String apiKey = '${{ secrets.ONESIGNAL_API_KEY }}'; }" > lib/config/onesignal_keys.dart
+
       - name: Install dependencies
         run: flutter pub get
 
-      # 5. بناء ملف APK (مقسم حسب المعالج لتقليل الحجم إلى النصف تقريباً)
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
-      # 6. رفع ملف APK كـ Artifact لتتمكن من تحميله
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: lamsa-seller-release-apk
-          # المسار من الجذر الرئيسي للمستودع
           path: lamsa_seller/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           retention-days: 30
