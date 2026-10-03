@@ -5,6 +5,7 @@ import '../auth/login_screen.dart';
 import '../products/my_products_screen.dart';
 import '../orders/seller_orders_screen.dart';
 import 'dashboard_home_screen.dart';
+import '../profile/seller_profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -36,12 +37,12 @@ class _MainNavigationState extends State<MainNavigation> {
         ],
       ),
       body: _index == 0
-          ? const DashboardHomeScreen()
-          : _index == 1
-              ? const MyProductsScreen()
-              : _index == 2
-                  ? const SellerOrdersScreen()
-                  : Center(child: Text('قسم: ${_titles[_index]}', style: const TextStyle(color: AppColors.grey))),
+    ? const DashboardHomeScreen()
+    : _index == 1
+        ? const MyProductsScreen()
+        : _index == 2
+            ? const SellerOrdersScreen()
+            : const SellerProfileScreen(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),

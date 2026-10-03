@@ -35,7 +35,7 @@ class SellerOrdersScreen extends StatelessWidget {
             final data = docs[index].data() as Map<String, dynamic>;
             final orderId = docs[index].id;
             final status = data['status'] ?? 'pendingApproval';
-            final isPending = status == 'pendingApproval';
+            final isCancelled = status == 'cancelledByCustomer'; // ✅ تمت إضافة المتغير
 
             return Container(
               padding: const EdgeInsets.all(12),
@@ -51,8 +51,13 @@ class SellerOrdersScreen extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: Image.network(data['productImage'] ?? '', width: 50, height: 50, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(width: 50, height: 50, color: AppColors.lightGrey)),
+                        child: Image.network(
+                          data['productImage'] ?? '',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(width: 50, height: 50, color: AppColors.lightGrey),
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -62,19 +67,37 @@ class SellerOrdersScreen extends StatelessWidget {
                             Text(data['productName'] ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                             Text('العميل: ${data['customerName'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.grey)),
                             Text('${data['customerPhone'] ?? '-'}', style: const TextStyle(fontSize: 11, color: AppColors.grey)),
+                            if (data['transferReference'] != null && (data['transferReference'] as String).isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(color: AppColors.accent.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                                child: Text(
+                                  '⚠️ تحقق من التحويل — مرجع: ${data['transferReference']}',
+                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.dark),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                       Text('${data['totalAmount'] ?? 0} ر.س', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
                     ],
                   ),
-                  if (isPending) ...[
-                    const SizedBox(height: 10),
+                  
+                  const SizedBox(height: 10),
+                  
+                  // ✅ منطق تحديث الحالات مع تمرير البيانات الجديدة
+                  if (status == 'pendingApproval') ...[
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => SellerOrderService().updateStatus(orderId, 'rejected'),
+                            onPressed: () => SellerOrderService().updateStatus(
+                              orderId, 'rejected',
+                              customerId: data['customerId'],
+                              productName: data['productName'],
+                            ),
                             style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, minimumSize: const Size.fromHeight(38)),
                             child: const Text('رفض'),
                           ),
@@ -82,23 +105,90 @@ class SellerOrdersScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () => SellerOrderService().updateStatus(orderId, 'confirmed'),
+                            onPressed: () => SellerOrderService().updateStatus(
+                              orderId, 'confirmed',
+                              customerId: data['customerId'],
+                              productName: data['productName'],
+                              productId: data['productId'],
+                              quantity: data['quantity'],
+                            ),
                             style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(38)),
                             child: const Text('موافقة'),
                           ),
                         ),
                       ],
                     ),
-                  ] else
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: (status == 'confirmed' ? AppColors.success : AppColors.primary).withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(8),
+                  ] else if (status == 'confirmed') ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => SellerOrderService().updateStatus(
+                          orderId, 'preparing',
+                          customerId: data['customerId'],
+                          productName: data['productName'],
+                        ),
+                        icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                        label: const Text('بدء التجهيز'),
+                        style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(38)),
                       ),
-                      child: Text(status == 'confirmed' ? 'تمت الموافقة' : 'مرفوض',
-                          style: TextStyle(fontSize: 11, color: status == 'confirmed' ? AppColors.success : AppColors.primary, fontWeight: FontWeight.w700)),
+                    ),
+                  ] else if (status == 'preparing') ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => SellerOrderService().updateStatus(
+                          orderId, 'shipped',
+                          customerId: data['customerId'],
+                          productName: data['productName'],
+                        ),
+                        icon: const Icon(Icons.local_shipping_outlined, size: 16),
+                        label: const Text('تم الشحن'),
+                        style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(38)),
+                      ),
+                    ),
+                  ] else if (status == 'shipped') ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => SellerOrderService().updateStatus(
+                          orderId, 'delivered',
+                          customerId: data['customerId'],
+                          productName: data['productName'],
+                        ),
+                        icon: const Icon(Icons.home_rounded, size: 16),
+                        label: const Text('تم التسليم'),
+                        style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(38)),
+                      ),
+                    ),
+                  ] 
+                  // ✅ تمت إضافة حالة الطلب الملغى من قبل الزبون
+                  else if (isCancelled)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.grey.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cancel_outlined, color: AppColors.grey, size: 14),
+                          SizedBox(width: 4),
+                          Text('ألغاه الزبون', style: TextStyle(color: AppColors.grey, fontSize: 11, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: AppColors.success.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, color: AppColors.success, size: 14),
+                          SizedBox(width: 4),
+                          Text('تم التسليم', style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
                     ),
                 ],
               ),

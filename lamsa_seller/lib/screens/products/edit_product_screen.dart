@@ -18,6 +18,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   late final _nameController = TextEditingController(text: widget.data['name'] ?? '');
   late final _descController = TextEditingController(text: widget.data['description'] ?? '');
   late final _priceController = TextEditingController(text: '${widget.data['price'] ?? ''}');
+  late bool _isFeatured = widget.data['isFeatured'] ?? false;
   late final _discountController = TextEditingController(
       text: widget.data['discountPrice'] != null ? '${widget.data['discountPrice']}' : '');
 
@@ -76,6 +77,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         discountPrice: discount,
         imageUrl: imageUrl,
         category: _selectedCategory,
+        isFeatured: _isFeatured,
       );
 
       if (!mounted) return;
@@ -143,12 +145,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
             const SizedBox(height: 12),
             TextField(controller: _discountController, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: 'سعر العرض (اختياري)')),
             const SizedBox(height: 12),
+            
+            // ✅ التصحيح: تم إصلاح ترتيب الـ Dropdown والـ Switch ليكونوا عناصر منفصلة
             DropdownButtonFormField<String>(
               initialValue: _selectedCategory,
-              decoration: const InputDecoration(),
+              decoration: const InputDecoration(hintText: 'التصنيف'),
               items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (value) => setState(() => _selectedCategory = value!),
             ),
+            
+            const SizedBox(height: 12),
+            
+            SwitchListTile(
+              value: _isFeatured,
+              onChanged: (value) => setState(() => _isFeatured = value),
+              title: const Text('منتج مميز ⭐', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              subtitle: const Text('يظهر بقسم "منتجات مميزة" بالشاشة الرئيسية', style: TextStyle(fontSize: 11, color: AppColors.grey)),
+              activeThumbColor: AppColors.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+
             if (_error != null) ...[
               const SizedBox(height: 10),
               Text(_error!, style: const TextStyle(color: AppColors.primary, fontSize: 12)),

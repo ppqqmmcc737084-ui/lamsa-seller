@@ -16,10 +16,26 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _storeNameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _walletNumberController = TextEditingController();
+  final _deliveryFeeController = TextEditingController(); // ✅ تمت الإضافة
+
+  String _walletName = 'الكريمي';
+  final _walletOptions = ['الكريمي', 'شلن', 'جوالي', 'أخرى'];
 
   bool _isLogin = true;
   bool _loading = false;
   String? _error;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _storeNameController.dispose();
+    _phoneController.dispose();
+    _walletNumberController.dispose();
+    _deliveryFeeController.dispose(); // ✅ تنظيف المتحكم الجديد
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     final email = _emailController.text.trim();
@@ -68,6 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
         'storeName': _storeNameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': email,
+        'walletName': _walletNumberController.text.trim().isEmpty ? null : _walletName,
+        'walletNumber': _walletNumberController.text.trim().isEmpty ? null : _walletNumberController.text.trim(),
+        'deliveryFee': double.tryParse(_deliveryFeeController.text.trim()) ?? 0, // ✅ تمت الإضافة هنا
         'createdAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
@@ -98,29 +117,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(fontSize: 13, color: AppColors.grey)),
                   const SizedBox(height: 28),
                   if (!_isLogin) ...[
-                    TextField(
-                      controller: _storeNameController,
-                      decoration: const InputDecoration(hintText: 'اسم المتجر'),
+                    TextField(controller: _storeNameController, decoration: const InputDecoration(hintText: 'اسم المتجر')),
+                    const SizedBox(height: 12),
+                    TextField(controller: _phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(hintText: 'رقم جوال المتجر')),
+                    const SizedBox(height: 12),
+                    const Align(alignment: Alignment.centerRight, child: Text('محفظة إلكترونية (اختياري)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: _walletName,
+                      decoration: const InputDecoration(),
+                      items: _walletOptions.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
+                      onChanged: (value) => setState(() => _walletName = value!),
                     ),
                     const SizedBox(height: 12),
+                    TextField(controller: _walletNumberController, keyboardType: TextInputType.phone, decoration: const InputDecoration(hintText: 'رقم المحفظة (اتركه فاضي إذا ما تستخدمها)')),
+                    const SizedBox(height: 12),
+                    // ✅ تمت إضافة حقل رسوم التوصيل هنا
                     TextField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(hintText: 'رقم جوال المتجر'),
+                      controller: _deliveryFeeController, 
+                      keyboardType: TextInputType.number, 
+                      decoration: const InputDecoration(hintText: 'رسوم التوصيل (ر.ي) — اتركه فاضي إذا مجاني')
                     ),
                     const SizedBox(height: 12),
                   ],
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(hintText: 'البريد الإلكتروني'),
-                  ),
+                  TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'البريد الإلكتروني')),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(hintText: 'كلمة المرور'),
-                  ),
+                  TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(hintText: 'كلمة المرور')),
                   if (_error != null) ...[
                     const SizedBox(height: 10),
                     Text(_error!, style: const TextStyle(color: AppColors.primary, fontSize: 12)),

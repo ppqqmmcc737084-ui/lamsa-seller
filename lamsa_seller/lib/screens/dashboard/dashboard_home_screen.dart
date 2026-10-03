@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/dashboard_service.dart';
 import '../banners/my_banners_screen.dart';
+import '../ads/my_ads_screen.dart';
+import '../coupons/my_coupons_screen.dart'; // ✅ تمت إضافة استيراد شاشة أكواد الخصم
 
 class DashboardHomeScreen extends StatelessWidget {
   const DashboardHomeScreen({super.key});
@@ -38,6 +40,19 @@ class DashboardHomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
+              
+              // ✅ أزرار الإدارة
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAdsScreen())),
+                  icon: const Icon(Icons.campaign_rounded),
+                  label: const Text('إعلاناتي المدفوعة'),
+                ),
+              ),
+              
+              const SizedBox(height: 10),
+              
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -46,6 +61,18 @@ class DashboardHomeScreen extends StatelessWidget {
                   label: const Text('إدارة العروض والبانرات'),
                 ),
               ),
+
+              // ✅ الزر الجديد: أكواد الخصم
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyCouponsScreen())),
+                  icon: const Icon(Icons.local_offer_outlined),
+                  label: const Text('أكواد الخصم'),
+                ),
+              ),
+
               if (stats.pendingOrders > 0) ...[
                 const SizedBox(height: 20),
                 Container(

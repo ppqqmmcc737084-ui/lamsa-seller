@@ -14,23 +14,51 @@ class SellerOrderService {
         .snapshots();
   }
 
-    Future<void> updateStatus(String orderId, String status, {String? customerId, String? productName}) async {
+  Future<void> updateStatus(
+    String orderId,
+    String status, {
+    String? customerId,
+    String? productName,
+    String? productId,
+    int? quantity,
+  }) async {
     await _collection.doc(orderId).update({'status': status});
 
-    if (customerId != null) {
-      final message = status == 'confirmed'
-          ? 'تمت الموافقة على طلبك: $productName'
-          : 'تم رفض طلبك: $productName';
-
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': customerId,
-        'message': message,
-        'orderId': orderId,
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
+    if (status == 'confirmed' && productId != null) {
+      await FirebaseFirestore.instance.collection('products').doc(productId).update({
+        'soldCount': FieldValue.increment(quantity ?? 1),
       });
-
-      await NotificationService().sendToCustomer(customerId, message);
     }
-   }
+
+    if (customerId != null) {
+      final message = _messageFor(status, productName ?? '');
+      if (message != null) {
+        await FirebaseFirestore.instance.collection('notifications').add({
+          'userId': customerId,
+          'message': message,
+          'orderId': orderId,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        await NotificationService().sendToCustomer(customerId, message);
+      }
+    }
   }
+
+  String? _messageFor(String status, String productName) {
+    switch (status) {
+      case 'confirmed':
+        return 'تمت الموافقة على طلبك: $productName';
+      case 'rejected':
+        return 'تم رفض طلبك: $productName';
+      case 'preparing':
+        return 'طلبك قيد التجهيز الآن: $productName';
+      case 'shipped':
+        return 'تم شحن طلبك 🚚: $productName';
+      case 'delivered':
+        return 'تم تسليم طلبك بنجاح 🎉: $productName';
+      default:
+        return null;
+    }
+  }
+}
