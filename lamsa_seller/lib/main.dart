@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'services/auth_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/main_navigation.dart';
+import 'screens/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,7 @@ class LamsaSellerApp extends StatelessWidget {
         stream: AuthService().authStateChanges,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const SplashScreen();
           }
           if (snapshot.hasData) {
             return const MainNavigation();
