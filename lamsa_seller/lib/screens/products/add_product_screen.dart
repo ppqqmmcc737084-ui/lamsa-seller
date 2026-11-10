@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/seller_product_service.dart';
@@ -53,13 +54,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
 
     final price = double.tryParse(priceText);
-    if (price == null) {
-      setState(() => _error = 'السعر لازم يكون رقم صحيح');
+    if (price == null || price <= 0) {
+      setState(() => _error = 'السعر لازم يكون رقماً صحيحاً أكبر من صفر');
       return;
     }
 
     final discountText = _discountController.text.trim();
     final discount = discountText.isEmpty ? null : double.tryParse(discountText);
+    if (discountText.isNotEmpty && (discount == null || discount <= 0 || discount >= price)) {
+      setState(() => _error = 'سعر العرض لازم يكون رقماً أقل من السعر الأصلي');
+      return;
+    }
 
     setState(() {
       _loading = true;
@@ -85,12 +90,35 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تمت إضافة المنتج بنجاح 🎉')),
       );
-    } catch (e) {
+    } on FirebaseException catch (e) {
       setState(() {
-        _error = 'حدث خطأ: $e';
+        _error = _friendlyError(e);
         _loading = false;
         _uploading = false;
       });
+    } catch (e) {
+      setState(() {
+        _error = 'تعذّر نشر المنتج، حاول مرة ثانية';
+        _loading = false;
+        _uploading = false;
+      });
+    }
+  }
+
+  String _friendlyError(FirebaseException e) {
+    switch (e.code) {
+      case 'object-not-found':
+      case 'bucket-not-found':
+        return 'تعذّر رفع الصورة: التخزين غير مُعدّ في مشروع Firebase (${e.code})';
+      case 'unauthorized':
+        return 'غير مصرّح لك برفع الصور (${e.code})';
+      case 'permission-denied':
+        return 'غير مصرّح لك بنشر المنتج، تأكد أن حسابك مفعّل';
+      case 'network-request-failed':
+      case 'unavailable':
+        return 'تحقق من الاتصال بالإنترنت وحاول مرة ثانية';
+      default:
+        return 'حدث خطأ (${e.code})';
     }
   }
 

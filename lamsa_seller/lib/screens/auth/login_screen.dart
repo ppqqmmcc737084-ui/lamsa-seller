@@ -109,7 +109,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.storefront_rounded, color: AppColors.primary, size: 56),
+                  Image.asset(
+                    'assets/logo/logo_transparent_1024.png',
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (_, _, _) => const Icon(Icons.storefront_rounded, color: AppColors.primary, size: 56),
+                  ),
                   const SizedBox(height: 12),
                   const Text('لمسة للتجار', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.dark)),
                   const SizedBox(height: 6),
