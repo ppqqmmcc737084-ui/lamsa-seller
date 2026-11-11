@@ -26,6 +26,21 @@ class AuthService {
 
   Future<void> signOut() => _auth.signOut();
 
+  Future<void> sendVerificationEmail() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } catch (_) {}
+  }
+
+  Future<String?> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapError(e.code);
+    }
+  }
+
   String _mapError(String code) {
     switch (code) {
       case 'user-not-found':
@@ -36,6 +51,12 @@ class AuthService {
         return 'هذا البريد مستخدم من قبل';
       case 'weak-password':
         return 'كلمة المرور ضعيفة، لازم 6 أحرف فأكثر';
+      case 'invalid-credential':
+        return 'البريد أو كلمة المرور غير صحيحة';
+      case 'too-many-requests':
+        return 'محاولات كثيرة، حاول بعد قليل';
+      case 'network-request-failed':
+        return 'تحقق من الاتصال بالإنترنت';
       case 'invalid-email':
         return 'صيغة البريد غير صحيحة';
       default:

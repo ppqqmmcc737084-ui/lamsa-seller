@@ -3,9 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
-import 'services/auth_service.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/dashboard/main_navigation.dart';
+import 'screens/gate/seller_gate.dart';
 import 'screens/splash/splash_screen.dart';
 
 void main() async {
@@ -30,18 +28,7 @@ class LamsaSellerApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: StreamBuilder(
-        stream: AuthService().authStateChanges,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SplashScreen();
-          }
-          if (snapshot.hasData) {
-            return const MainNavigation();
-          }
-          return const LoginScreen();
-        },
-      ),
+      home: const SellerGate(),
     );
   }
 }

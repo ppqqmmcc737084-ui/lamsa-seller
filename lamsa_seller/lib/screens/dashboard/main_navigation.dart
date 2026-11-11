@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
-import '../auth/login_screen.dart';
 import '../products/my_products_screen.dart';
 import '../orders/seller_orders_screen.dart';
 import 'dashboard_home_screen.dart';
@@ -30,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation> {
             onPressed: () async {
               await AuthService().signOut();
               if (context.mounted) {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                Navigator.of(context).popUntil((route) => route.isFirst);
               }
             },
           ),
