@@ -137,11 +137,11 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
     );
     if (source == null) return;
     try {
-      final picked = await ImagePicker().pickImage(source: source, imageQuality: 80, maxWidth: 1800);
+      final picked = await ImagePicker().pickImage(source: source, imageQuality: 70, maxWidth: 1200);
       if (picked == null) return;
       final bytes = await picked.readAsBytes();
-      if (bytes.length > 4 * 1024 * 1024) {
-        if (mounted) setState(() => _error = 'الصورة كبيرة، اختر صورة أصغر من 4 ميجا');
+      if (bytes.length > 700 * 1024) {
+        if (mounted) setState(() => _error = 'الصورة كبيرة، اختر صورة أصغر من 700 كيلوبايت');
         return;
       }
       if (mounted) {

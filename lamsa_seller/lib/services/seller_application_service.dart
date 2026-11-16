@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 /// طلب تسجيل التاجر: مسودة ثم مراجعة ثم قبول أو رفض.
 class SellerApplicationService {
@@ -36,15 +35,19 @@ class SellerApplicationService {
     return _ref.set(data, SetOptions(merge: true));
   }
 
-  /// يرفع صورة وثيقة إلى مسار خاص ويرجع المسار.
+  /// يحفظ صورة وثيقة (مضغوطة) في وثيقة خاصة ويرجع علامة مسارها.
   Future<String> uploadDoc(Uint8List bytes, String slot, String fileName) async {
-    final path = 'sellerDocs/$_uid/$slot';
+    await saveFields({}); // يضمن وجود المسودة قبل حفظ الصورة
     final lower = fileName.toLowerCase();
     final type = lower.endsWith('.png')
         ? 'image/png'
         : (lower.endsWith('.webp') ? 'image/webp' : 'image/jpeg');
-    await FirebaseStorage.instance.ref(path).putData(bytes, SettableMetadata(contentType: type));
-    return path;
+    await _ref.collection('docs').doc(slot).set({
+      'bytes': Blob(bytes),
+      'contentType': type,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return 'docs/$slot';
   }
 
   /// يرجع null عند النجاح، أو نصاً يشرح السبب.
@@ -106,5 +109,10 @@ class SellerApplicationService {
     });
   }
 
-  Future<String> docUrl(String path) => FirebaseStorage.instance.ref(path).getDownloadURL();
+  /// يقرأ صورة وثيقة تاجر (للمدير).
+  Future<Uint8List?> loadDoc(String uid, String slot) async {
+    final snap = await _db.collection('sellerApplications').doc(uid).collection('docs').doc(slot).get();
+    final blob = snap.data()?['bytes'];
+    return blob is Blob ? blob.bytes : null;
+  }
 }

@@ -90,6 +90,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تمت إضافة المنتج بنجاح 🎉')),
       );
+    } on StorageUploadException catch (e) {
+      setState(() {
+        _error = e.message;
+        _loading = false;
+        _uploading = false;
+      });
     } on FirebaseException catch (e) {
       setState(() {
         _error = _friendlyError(e);

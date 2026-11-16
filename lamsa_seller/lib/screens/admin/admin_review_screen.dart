@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
@@ -105,10 +106,11 @@ class AdminApplicationScreen extends StatefulWidget {
 
 class _AdminApplicationScreenState extends State<AdminApplicationScreen> {
   final _service = SellerApplicationService();
-  final Map<String, Future<String>> _urls = {};
+  final Map<String, Future<Uint8List?>> _imgs = {};
   bool _busy = false;
 
-  Future<String> _urlFor(String path) => _urls.putIfAbsent(path, () => _service.docUrl(path));
+  Future<Uint8List?> _bytesFor(String slot) =>
+      _imgs.putIfAbsent(slot, () => _service.loadDoc(widget.uid, slot));
 
   Map<String, dynamic> get _d => widget.data;
   String _v(String key) => (_d[key] ?? '').toString();
@@ -132,7 +134,7 @@ class _AdminApplicationScreenState extends State<AdminApplicationScreen> {
     );
   }
 
-  Widget _image(String label, dynamic path) {
+  Widget _image(String label, String slot, dynamic path) {
     if (path is! String || path.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -141,10 +143,10 @@ class _AdminApplicationScreenState extends State<AdminApplicationScreen> {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
           const SizedBox(height: 6),
-          FutureBuilder<String>(
-            future: _urlFor(path),
+          FutureBuilder<Uint8List?>(
+            future: _bytesFor(slot),
             builder: (context, snap) {
-              if (snap.hasError) {
+              if (snap.hasError || (snap.connectionState == ConnectionState.done && snap.data == null)) {
                 return const Text('تعذّر تحميل الصورة',
                     style: TextStyle(color: AppColors.primary, fontSize: 12));
               }
@@ -154,15 +156,15 @@ class _AdminApplicationScreenState extends State<AdminApplicationScreen> {
                   child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
                 );
               }
-              final url = snap.data!;
+              final bytes = snap.data!;
               return GestureDetector(
                 onTap: () => showDialog(
                   context: context,
-                  builder: (_) => Dialog(child: InteractiveViewer(child: Image.network(url))),
+                  builder: (_) => Dialog(child: InteractiveViewer(child: Image.memory(bytes))),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.medium),
-                  child: Image.network(url, height: 200, width: double.infinity, fit: BoxFit.cover),
+                  child: Image.memory(bytes, height: 200, width: double.infinity, fit: BoxFit.cover),
                 ),
               );
             },
@@ -260,9 +262,9 @@ class _AdminApplicationScreenState extends State<AdminApplicationScreen> {
                     _row('رسوم التوصيل', fee is num && fee > 0 ? '$fee ر.ي' : 'مجاني'),
                     _row('المحفظة', _v('walletNumber').isEmpty ? 'لا يوجد' : '${_v('walletName')} - ${_v('walletNumber')}'),
                     const SizedBox(height: 16),
-                    _image(passport ? 'صفحة الجواز' : 'وجه الهوية', _d['idFrontPath']),
-                    _image('ظهر الهوية', _d['idBackPath']),
-                    _image('الصورة الشخصية مع الوثيقة', _d['selfiePath']),
+                    _image(passport ? 'صفحة الجواز' : 'وجه الهوية', 'idFront', _d['idFrontPath']),
+                    _image('ظهر الهوية', 'idBack', _d['idBackPath']),
+                    _image('الصورة الشخصية مع الوثيقة', 'selfie', _d['selfiePath']),
                   ],
                 ),
               ),
