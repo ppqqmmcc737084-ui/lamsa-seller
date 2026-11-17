@@ -34,7 +34,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1600);
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     setState(() {

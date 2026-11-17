@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -30,7 +31,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80, maxWidth: 1600);
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     setState(() {
@@ -83,13 +84,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
         discountPrice: discount,
         imageUrl: imageUrl,
         category: _selectedCategory,
-      );
+      ).timeout(const Duration(seconds: 25));
 
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تمت إضافة المنتج بنجاح 🎉')),
       );
+    } on TimeoutException catch (_) {
+      setState(() {
+        _error = 'لم يصلنا تأكيد الحفظ من الخادم. تحقق من الإنترنت، وقد يظهر المنتج في "منتجاتي" بعد قليل، فتأكد قبل ما تعيد النشر';
+        _loading = false;
+        _uploading = false;
+      });
     } on StorageUploadException catch (e) {
       setState(() {
         _error = e.message;
