@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,34 @@ class SellerOrdersScreen extends StatefulWidget {
 
 class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
   final _service = SellerOrderService();
-  late final Stream<QuerySnapshot> _stream = _service.streamMyOrders();
+  final ValueNotifier<String> _debug = ValueNotifier('بانتظار أول رد من الخادم...');
+  int _events = 0;
+  late final Stream<QuerySnapshot> _stream = _service.streamMyOrders().transform(
+        StreamTransformer<QuerySnapshot, QuerySnapshot>.fromHandlers(
+          handleData: (snapshot, sink) {
+            _events++;
+            final t = DateTime.now();
+            final sec = t.second.toString().padLeft(2, '0');
+            final source = snapshot.metadata.isFromCache ? 'من الذاكرة' : 'من الخادم';
+            _debug.value = 'حدث $_events | ${snapshot.docs.length} طلب | $source | ${t.minute}:$sec';
+            sink.add(snapshot);
+          },
+          handleError: (error, stack, sink) {
+            _events++;
+            final code = error is FirebaseException ? error.code : error.runtimeType.toString();
+            _debug.value = 'حدث $_events | خطأ: $code';
+            sink.addError(error, stack);
+          },
+        ),
+      );
   _Filter _filter = _Filter.all;
   final Set<String> _busy = {};
+
+  @override
+  void dispose() {
+    _debug.dispose();
+    super.dispose();
+  }
 
   static const Map<_Filter, String> _filterLabels = {
     _Filter.all: 'الكل',
@@ -143,7 +169,19 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
+    return Column(
+      children: [
+        ValueListenableBuilder<String>(
+          valueListenable: _debug,
+          builder: (context, text, _) => Container(
+            width: double.infinity,
+            color: const Color(0xFFFFF3CD),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            child: Text(text, textDirection: TextDirection.rtl, style: const TextStyle(fontSize: 11)),
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
       stream: _stream,
       builder: (context, snapshot) {
         if (snapshot.hasError && !snapshot.hasData) {
@@ -205,6 +243,9 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> {
           ],
         );
       },
+    ),
+        ),
+      ],
     );
   }
 
